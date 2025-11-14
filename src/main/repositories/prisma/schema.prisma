@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Immeuble {
+  id                Int      @id @default(autoincrement())
+  nom               String
+  adresse           String
+  codePostal        String
+  ville             String
+  pays              String
+  type              String
+  nombreEtages      Int
+  dateConstruction  DateTime
+  proprietaireId    Int
+  
+  // Relations
+  baux              Bail[]
+  ventes            Vente[]
+  
+  @@map("Immeuble")
+}
+
+model Bail {
+  id           Int      @id @default(autoincrement())
+  dateDebut    DateTime
+  dateFin      DateTime
+  montantLoyer Float
+  locataireId  Int
+  immeubleId   Int
+  
+  // Relations
+  immeuble     Immeuble @relation(fields: [immeubleId], references: [id])
+  
+  @@map("Bail")
+}
+
+model Vente {
+  id           Int      @id @default(autoincrement())
+  dateVente    DateTime
+  montantVente Float
+  acheteurId   Int
+  immeubleId   Int
+  
+  // Relations
+  immeuble     Immeuble @relation(fields: [immeubleId], references: [id])
+  
+  @@map("Vente")
+}
+
+model FondsPropre {
+  id              Int      @id @default(autoincrement())
+  montant         Float
+  date            DateTime
+  proprietaireId  Int
+  totalActifs     Float
+  totalPassifs    Float
+  totalDisponible Float
+  
+  @@map("FondsPropre")
+}
