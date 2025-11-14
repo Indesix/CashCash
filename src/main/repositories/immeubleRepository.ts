@@ -2,6 +2,7 @@ import Immeuble from "../../shared/immeuble";
 import { PrismaClient } from "@prisma/client";
 
 export class ImmeubleRepository {
+    
     private dbclient: PrismaClient;
     constructor() {
         this.dbclient = new PrismaClient();
@@ -9,6 +10,12 @@ export class ImmeubleRepository {
     async getImmeubles(): Promise<Immeuble[]> {
         let immeubles = await this.dbclient.immeuble.findMany();
         return immeubles;
+    }
+    async addImmeuble(immeuble: Immeuble): Promise<Immeuble> {
+        await this.dbclient.immeuble.create({
+            data: immeuble
+        });
+        return immeuble;
     }
 
     async getImmeubleById(id: number): Promise<Immeuble | null> {
