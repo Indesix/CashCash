@@ -9,7 +9,7 @@ Suivez ces étapes pour lancer le projet localement.
 ### 1. Cloner le projet
 
 ```bash
-git clone <votre-url-de-repository>
+git clone https://github.com/Indesix/CashCash.git cashcashapp
 cd cashcashapp
 ```
 
