@@ -52,7 +52,7 @@ npm run start
 ```
 
 ## ✨ Fonctionnalités principales
-
+Objectif: permettre à un investisseur en immobilier de gérer son patrimoine (achat, vente, entretien, location) et visualiser sa trésorerie.
 - **Gestion de Trésorerie** : 
   - Ajouter un nouveau compte bancaire.
   - Voir le solde des comptes.
