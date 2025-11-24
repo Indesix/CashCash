@@ -10,6 +10,16 @@
       @delete="handleDeleteTresorerie"
     />
 
+    <EntretienWidget 
+      :entretiens="entretiens"
+      @delete="handleDeleteEntretien"
+    />
+
+    <LocataireWidget 
+      :locataires="locataires"
+      @delete="handleDeleteLocataire"
+    />
+
     <div class="content-split">
       <div class="list-section">
         <div class="header-row">
@@ -31,13 +41,43 @@
             @delete="handleDeleteImmeuble"
           />
         </div>
+
+        <div class="transactions-section">
+          <h2>📉 Dernières Transactions</h2>
+          <div class="transactions-list">
+            <div v-if="transactions.length === 0" class="info">Aucune transaction.</div>
+            <table v-else class="transactions-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th>Montant</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="t in transactions" :key="t.idTransaction">
+                  <td>{{ new Date(t.dateTransaction).toLocaleDateString() }}</td>
+                  <td><span class="badge-type">{{ t.typeTransaction }}</span></td>
+                  <td>{{ t.description }}</td>
+                  <td :class="t.montant < 0 ? 'negative' : 'positive'">
+                    {{ new Intl.NumberFormat('fr-BE', { style: 'currency', currency: 'EUR' }).format(t.montant) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div v-if="showAddForm" class="form-section">
         <AddImmeubleForm 
           :initialData="editingImmeuble"
+          :tresoreries="tresoreries"
+          :locataires="locataires"
           @save="handleSaveImmeuble" 
           @cancel="handleCancelForm"
+          @add-entretien="handleAddEntretien"
         />
       </div>
 
@@ -57,10 +97,16 @@
 import { ref, onMounted } from 'vue';
 import Immeuble from '../../shared/immeuble'; // Use shared interface
 import { Tresorerie } from '../../shared/tresorerie';
+import { Entretien } from '../../shared/entretien';
 import { useImmeubles } from '../composables/immeubles'; // Use composable
 import { useTresorerie } from '../composables/tresorerie'; // Use composable
+import { useTransactions } from '../composables/transactions';
+import { useLocataires } from '../composables/locataires';
+import { useEntretiens } from '../composables/entretiens';
 
 import TresorerieWidget from '../components/TresorerieWidget.vue';
+import LocataireWidget from '../components/LocataireWidget.vue';
+import EntretienWidget from '../components/EntretienWidget.vue';
 import AddImmeubleForm from '../components/AddImmeubleForm.vue';
 import AddTresorerieForm from '../components/AddTresorerieForm.vue';
 import Card from '../components/Card.vue';
@@ -76,6 +122,9 @@ const editingTresorerie = ref<Tresorerie | null>(null);
 // Use the composables
 const { immeubles, fetchImmeubles, addImmeuble, updateImmeuble, deleteImmeuble } = useImmeubles();
 const { tresoreries, fetchTresoreries, addTresorerie, updateTresorerie, deleteTresorerie } = useTresorerie();
+const { transactions, fetchTransactions } = useTransactions();
+const { locataires, fetchLocataires, deleteLocataire } = useLocataires();
+const { entretiens, fetchEntretiens, addEntretien, deleteEntretien } = useEntretiens();
 
 // --- LOGIQUE ---
 const loadData = async () => {
@@ -84,7 +133,10 @@ const loadData = async () => {
   // Fetch real data from Electron/DB
   await Promise.all([
     fetchImmeubles(),
-    fetchTresoreries()
+    fetchTresoreries(),
+    fetchTransactions(),
+    fetchLocataires(),
+    fetchEntretiens()
   ]);
 
   loading.value = false;
@@ -96,14 +148,11 @@ const handleSaveImmeuble = async (formData: Immeuble) => {
     // Update existing
     console.log("Updating database:", formData);
     await updateImmeuble(formData);
+    await Promise.all([fetchTresoreries(), fetchTransactions(), fetchLocataires(), fetchImmeubles()]);
   } else {
     // Create new
-    // Map the simplified form data to the full Immeuble object if needed, 
-    // but AddImmeubleForm now returns a fuller object (though still partial if fields are missing)
-    // We should ensure defaults are set if they are missing.
     const newImmeuble: Immeuble = {
       ...formData,
-      // Ensure defaults for fields not in the form if they are undefined
       rc: formData.rc ?? 0,
       chambres: formData.chambres ?? 0,
       wc: formData.wc ?? 0,
@@ -116,6 +165,8 @@ const handleSaveImmeuble = async (formData: Immeuble) => {
     };
     console.log("Saving to database:", newImmeuble);
     await addImmeuble(newImmeuble);
+    // Refresh everything as adding an immeuble might create a transaction, update treasury, or create a locataire
+    await Promise.all([fetchTresoreries(), fetchTransactions(), fetchLocataires(), fetchImmeubles()]);
   }
   
   handleCancelForm();
@@ -164,6 +215,34 @@ const handleEditTresorerie = (compte: Tresorerie) => {
 const handleCancelTresorerieForm = () => {
   showTresorerieForm.value = false;
   editingTresorerie.value = null;
+};
+
+const handleDeleteLocataire = async (id: number) => {
+  if (confirm('Êtes-vous sûr de vouloir supprimer ce locataire ?')) {
+    try {
+      await deleteLocataire(id);
+      // Refresh immeubles because some might have been linked to this tenant
+      await fetchImmeubles();
+    } catch (error) {
+      console.error("Failed to delete locataire:", error);
+      alert("Impossible de supprimer ce locataire. Il est peut-être lié à d'autres données.");
+    }
+  }
+};
+
+const handleDeleteEntretien = async (id: number) => {
+  if (confirm('Êtes-vous sûr de vouloir supprimer cet entretien ?')) {
+    await deleteEntretien(id);
+  }
+};
+
+const handleAddEntretien = async (data: { entretien: Omit<Entretien, 'idEntretien'>, idTresorerie: number }) => {
+  await addEntretien(data.entretien, data.idTresorerie);
+  // Refresh data to show impact on treasury and transactions
+  await Promise.all([
+    fetchTresoreries(),
+    fetchTransactions()
+  ]);
 };
 
 // Au montage du composant
@@ -264,5 +343,55 @@ onMounted(() => {
 .price {
   font-weight: bold;
   color: #27ae60;
+}
+
+/* Transactions Table */
+.transactions-section {
+  margin-top: 3rem;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  color: #333;
+}
+
+.transactions-table th,
+.transactions-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.transactions-table th {
+  background: #f3f4f6;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.transactions-table tr:last-child td {
+  border-bottom: none;
+}
+
+.badge-type {
+  background: #e5e7eb;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.positive {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.negative {
+  color: #ef4444;
+  font-weight: bold;
 }
 </style>

@@ -51,23 +51,34 @@ CREATE TABLE Immeuble (
 -- ==========================================================
 -- 3. CRÉATION DE L'ENFANT (EN DERNIER)
 -- ==========================================================
+-- ==========================================================
+-- 2. MISE À JOUR DE LA TABLE TRANSACTION
+-- ==========================================================
+-- On la recrée pour y ajouter les colonnes manquantes (Locataire, Emprunt, Entretien)
+-- (On utilise DROP/CREATE car c'est plus propre que de faire plein d'ALTER)
 
--- C. TRANSACTION (Doit être créée en DERNIER car elle pointe vers les deux autres)
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS Transaction;
+SET FOREIGN_KEY_CHECKS = 1;
+
 CREATE TABLE Transaction (
     IdTransaction   INT PRIMARY KEY,
     DateTransaction DATETIME NOT NULL,
-    Montant         DECIMAL(12,2) NOT NULL,
-    TypeTransaction VARCHAR(50) NOT NULL,
+    Montant         DECIMAL(12,2) NOT NULL, -- (-) Dépense, (+) Recette
+    TypeTransaction VARCHAR(50) NOT NULL,   -- 'LOYER', 'TRAVAUX', 'CREDIT'
     Description     VARCHAR(255),
     
-    IdImmeuble      INT,          -- Peut être vide
-    IdTresorerie    INT NOT NULL, -- Obligatoire
+    IdTresorerie    INT NOT NULL,
+    IdImmeuble      INT,
+    IdLocataire     INT, -- NOUVEAU
+    IdEmprunt       INT, -- NOUVEAU
+    IdEntretien     INT, -- NOUVEAU
 
-    -- C'est ici qu'on crée les liens. 
-    -- Si Tresorerie ou Immeuble n'existent pas au dessus, ça plante.
-    CONSTRAINT fk_transaction_tresorerie 
-        FOREIGN KEY (IdTresorerie) REFERENCES Tresorerie(IdTresorerie),
-
-    CONSTRAINT fk_transaction_immeuble 
-        FOREIGN KEY (IdImmeuble) REFERENCES Immeuble(IdImmeuble)
+    CONSTRAINT fk_transac_tresorerie FOREIGN KEY (IdTresorerie) REFERENCES Tresorerie(IdTresorerie),
+    CONSTRAINT fk_transac_immeuble   FOREIGN KEY (IdImmeuble)   REFERENCES Immeuble(IdImmeuble),
+    CONSTRAINT fk_transac_locataire  FOREIGN KEY (IdLocataire)  REFERENCES Locataire(IdLocataire),
+    CONSTRAINT fk_transac_emprunt    FOREIGN KEY (IdEmprunt)    REFERENCES Emprunt(IdEmprunt),
+    CONSTRAINT fk_transac_entretien  FOREIGN KEY (IdEntretien)  REFERENCES Entretien_Log(IdEntretien)
 );
+
+

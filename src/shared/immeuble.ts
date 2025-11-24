@@ -18,4 +18,6 @@ export default interface Immeuble {
     studic?: boolean;
     commun?: boolean;
     nbColocs?: number;
+    locataireName?: string;
+    idLocataire?: number;
 }

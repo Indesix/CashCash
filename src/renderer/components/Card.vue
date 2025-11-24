@@ -42,6 +42,13 @@
         </span>
       </span>
     </div>
+
+    <div class="info-row">
+      <span class="label">Locataire :</span>
+      <span class="value">
+        {{ immeuble.locataireName || 'Non-loué' }}
+      </span>
+    </div>
   </div>
 </template>
 
