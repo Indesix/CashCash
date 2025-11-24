@@ -1,12 +1,21 @@
 export default interface Immeuble {
-    id: number;
-    nom: string;
+    idImmeuble?: number;
+    typeImmeuble: string;
     adresse: string;
-    codePostal: string;
-    ville: string;
-    pays: string;
-    type: string;
-    nombreEtages: number;
-    dateConstruction: Date;
-    proprietaireId: number;
+    rc: number;
+    surface: number;
+    valeurAchat: number;
+    idTresorerie: number;
+    chambres: number;
+    wc: number;
+    grenier: boolean;
+    garage?: boolean;
+    jardin: boolean;
+    balcon: boolean;
+    ascenseur: boolean;
+    loyerCommerce?: number;
+    typeCommerce?: string;
+    studic?: boolean;
+    commun?: boolean;
+    nbColocs?: number;
 }

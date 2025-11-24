@@ -1,0 +1,121 @@
+/* Reset de base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Variables de thème vert & or */
+:root {
+  --bg-main: #01130f;
+  --bg-card: #064e3b;
+  --bg-soft: #022c22;
+
+  --border-soft: #065f46;
+
+  --text-main: #f9fafb;
+  --text-muted: #9ca3af;
+
+  --accent-gold: #facc15;
+  --accent-gold-soft: #fbbf24;
+  --accent-green: #10b981;
+
+  --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* Typo globale */
+html {
+  font-size: 16px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* App container */
+#app {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, #73ebcf 0, #0a5041 50%, #000 100%);
+  color: var(--text-main);
+  /* On retire le flex center qui empêchait le remplissage */
+  display: block; 
+}
+
+/* Liens */
+a {
+  color: var(--accent-gold-soft);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Boutons génériques */
+button {
+  font-family: inherit;
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-soft));
+  color: #1f2933;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4);
+  filter: brightness(1.05);
+}
+
+/* Inputs & textarea */
+input,
+textarea,
+select {
+  font-family: inherit;
+  background-color: var(--bg-soft);
+  border: 2px solid var(--border-soft);
+  border-radius: 8px;
+  color: var(--text-main);
+  padding: 0.6rem 0.9rem;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+}
+
+/* Cartes / panels par défaut */
+.card {
+  background-color: var(--bg-card);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(250, 204, 21, 0.25);
+}
+
+/* Titres */
+h1,
+h2,
+h3,
+h4 {
+  color: var(--accent-gold);
+  letter-spacing: 0.05em;
+}
+
+/* Texte secondaire */
+.muted {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

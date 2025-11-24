@@ -1,2 +1,9 @@
-// See the Electron documentation for details on how to use preload scripts:
-// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
+import { contextBridge, ipcRenderer } from "electron";
+import { immeubleService } from "./immeubleService";
+import { tresorerieService } from "./tresorerieService";
+import IElectronService from "../shared/interfaces/IElectronService";
+
+contextBridge.exposeInMainWorld("electronService", {
+    immeubles: immeubleService(),
+    tresoreries: tresorerieService()
+} as IElectronService)

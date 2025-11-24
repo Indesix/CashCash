@@ -1,66 +1,116 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "./generated"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
-model Immeuble {
-  id                Int      @id @default(autoincrement())
-  nom               String
-  adresse           String
-  codePostal        String
-  ville             String
-  pays              String
-  type              String
-  nombreEtages      Int
-  dateConstruction  DateTime
-  proprietaireId    Int
-  
-  // Relations
-  baux              Bail[]
-  ventes            Vente[]
-  
-  @@map("Immeuble")
+model bail {
+  IdBail      Int        @id
+  Duree       Int?
+  Loyer       Decimal?   @db.Decimal(10, 2)
+  IdImmeuble  Int?
+  IdLocataire Int?
+  immeuble    immeuble?  @relation(fields: [IdImmeuble], references: [IdImmeuble], onDelete: NoAction, onUpdate: NoAction, map: "fk_bail_immeuble")
+  locataire   locataire? @relation(fields: [IdLocataire], references: [IdLocataire], onDelete: NoAction, onUpdate: NoAction, map: "fk_bail_locataire")
+
+  @@index([IdImmeuble], map: "fk_bail_immeuble")
+  @@index([IdLocataire], map: "fk_bail_locataire")
 }
 
-model Bail {
-  id           Int      @id @default(autoincrement())
-  dateDebut    DateTime
-  dateFin      DateTime
-  montantLoyer Float
-  locataireId  Int
-  immeubleId   Int
-  
-  // Relations
-  immeuble     Immeuble @relation(fields: [immeubleId], references: [id])
-  
-  @@map("Bail")
+model emprunt {
+  IdEmprunt     Int           @id
+  NomBanque     String?       @db.VarChar(100)
+  TotalEmprunte Decimal?      @db.Decimal(12, 2)
+  Taux          Decimal?      @db.Decimal(5, 2)
+  DureeMois     Int?
+  IdTresorerie  Int?
+  tresorerie    tresorerie?   @relation(fields: [IdTresorerie], references: [IdTresorerie], onDelete: NoAction, onUpdate: NoAction, map: "fk_emprunt_tresorerie")
+  transaction   transaction[]
+
+  @@index([IdTresorerie], map: "fk_emprunt_tresorerie")
 }
 
-model Vente {
-  id           Int      @id @default(autoincrement())
-  dateVente    DateTime
-  montantVente Float
-  acheteurId   Int
-  immeubleId   Int
-  
-  // Relations
-  immeuble     Immeuble @relation(fields: [immeubleId], references: [id])
-  
-  @@map("Vente")
+model entretien_log {
+  IdEntretien Int           @id
+  DateHeure   DateTime?     @db.DateTime(0)
+  Responsable String?       @db.VarChar(100)
+  Description String?       @db.VarChar(255)
+  Cout        Decimal?      @db.Decimal(10, 2)
+  IdImmeuble  Int?
+  immeuble    immeuble?     @relation(fields: [IdImmeuble], references: [IdImmeuble], onDelete: NoAction, onUpdate: NoAction, map: "fk_entretien_immeuble")
+  transaction transaction[]
+
+  @@index([IdImmeuble], map: "fk_entretien_immeuble")
 }
 
-model FondsPropre {
-  id              Int      @id @default(autoincrement())
-  montant         Float
-  date            DateTime
-  proprietaireId  Int
-  totalActifs     Float
-  totalPassifs    Float
-  totalDisponible Float
-  
-  @@map("FondsPropre")
+model immeuble {
+  IdImmeuble    Int             @id
+  TypeImmeuble  String          @db.VarChar(20)
+  Adresse       String?         @db.VarChar(255)
+  RC            Int?
+  Surface       Decimal?        @db.Decimal(10, 2)
+  ValeurAchat   Decimal?        @db.Decimal(12, 2)
+  Chambres      Int?
+  WC            Int?
+  Grenier       Boolean?
+  Garage        Boolean?
+  Jardin        Boolean?
+  Balcon        Boolean?
+  Ascenseur     Boolean?
+  LoyerCommerce Decimal?        @db.Decimal(10, 2)
+  TypeCommerce  String?         @db.VarChar(50)
+  Studio        Boolean?
+  Commun        Boolean?
+  NbColocs      Int?
+  bail          bail[]
+  entretien_log entretien_log[]
+  transaction   transaction[]
+}
+
+model locataire {
+  IdLocataire Int           @id
+  Nom         String?       @db.VarChar(100)
+  Prenom      String?       @db.VarChar(100)
+  Age         Int?
+  Travail     String?       @db.VarChar(100)
+  Salaire     Decimal?      @db.Decimal(10, 2)
+  Marie       Boolean?
+  Enfants     Int?
+  bail        bail[]
+  transaction transaction[]
+}
+
+model tresorerie {
+  IdTresorerie Int           @id
+  NomCompte    String?       @db.VarChar(50)
+  SoldeInitial Decimal?      @default(0.00) @db.Decimal(12, 2)
+  emprunt      emprunt[]
+  transaction  transaction[]
+}
+
+model transaction {
+  IdTransaction   Int            @id
+  DateTransaction DateTime       @db.DateTime(0)
+  Montant         Decimal        @db.Decimal(12, 2)
+  TypeTransaction String         @db.VarChar(50)
+  Description     String?        @db.VarChar(255)
+  IdTresorerie    Int
+  IdImmeuble      Int?
+  IdLocataire     Int?
+  IdEmprunt       Int?
+  IdEntretien     Int?
+  emprunt         emprunt?       @relation(fields: [IdEmprunt], references: [IdEmprunt], onDelete: NoAction, onUpdate: NoAction, map: "fk_transac_emprunt")
+  entretien_log   entretien_log? @relation(fields: [IdEntretien], references: [IdEntretien], onDelete: NoAction, onUpdate: NoAction, map: "fk_transac_entretien")
+  immeuble        immeuble?      @relation(fields: [IdImmeuble], references: [IdImmeuble], onDelete: NoAction, onUpdate: NoAction, map: "fk_transac_immeuble")
+  locataire       locataire?     @relation(fields: [IdLocataire], references: [IdLocataire], onDelete: NoAction, onUpdate: NoAction, map: "fk_transac_locataire")
+  tresorerie      tresorerie     @relation(fields: [IdTresorerie], references: [IdTresorerie], onDelete: NoAction, onUpdate: NoAction, map: "fk_transac_tresorerie")
+
+  @@index([IdEmprunt], map: "fk_transac_emprunt")
+  @@index([IdEntretien], map: "fk_transac_entretien")
+  @@index([IdImmeuble], map: "fk_transac_immeuble")
+  @@index([IdLocataire], map: "fk_transac_locataire")
+  @@index([IdTresorerie], map: "fk_transac_tresorerie")
 }
