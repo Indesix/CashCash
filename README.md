@@ -1,4 +1,4 @@
-git clone https://github.com/Indesix/# CashCash 💰
+git clone https://github.com/Indesix/# CashCashApp 💰
 
 Application de gestion immobilière et de trésorerie développée avec Electron, Vue 3 et Prisma.
 
