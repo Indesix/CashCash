@@ -50,21 +50,27 @@
             </label>
           </div>
           
-          <input 
-            v-if="locataireMode === 'new'"
-            v-model="form.locataireName" 
-            placeholder="Nom du nouveau locataire" 
-          />
-          
-          <select 
-            v-else
-            v-model="form.idLocataire"
-          >
-            <option :value="undefined">-- Sélectionner un locataire --</option>
-            <option v-for="l in locataires" :key="l.idLocataire" :value="l.idLocataire">
-              {{ l.nom }} {{ l.prenom || '' }}
-            </option>
-          </select>
+          <div class="input-row">
+            <input 
+              v-if="locataireMode === 'new'"
+              v-model="form.locataireName" 
+              placeholder="Nom du nouveau locataire" 
+            />
+            
+            <select 
+              v-else
+              v-model="form.idLocataire"
+            >
+              <option :value="undefined">-- Sélectionner un locataire --</option>
+              <option v-for="l in locataires" :key="l.idLocataire" :value="l.idLocataire">
+                {{ l.nom }} {{ l.prenom || '' }}
+              </option>
+            </select>
+
+            <button type="button" class="btn-icon-small" @click="clearLocataire" title="Retirer le locataire">
+              ❌
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -261,6 +267,11 @@ const addEntretien = () => {
   entretienForm.idTresorerie = 0;
   alert('Entretien ajouté !');
 };
+
+const clearLocataire = () => {
+  form.locataireName = '';
+  form.idLocataire = undefined;
+};
 </script>
 
 <style scoped>
@@ -391,5 +402,30 @@ button {
   font-weight: normal;
   font-size: 0.9rem;
   cursor: pointer;
+}
+
+.input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.input-row input, .input-row select {
+  flex: 1;
+}
+
+.btn-icon-small {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.btn-icon-small:hover {
+  background: #ffebee;
+  border-color: #ffcdd2;
 }
 </style>

@@ -6,5 +6,5 @@ export default interface IImmeubleService {
     addImmeuble:(immeuble: Immeuble) => Promise<void>
     deleteImmeuble:(id: number) => Promise<void>
     updateImmeuble:(immeuble: Immeuble) => Promise<void>
-    toggleImmeuble:(id: number) => Promise<void>
+    //toggleImmeuble:(id: number) => Promise<void>
 }

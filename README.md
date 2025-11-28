@@ -1,63 +1,75 @@
-git clone https://github.com/Indesix/# CashCashApp 💰
+# CashCashApp 💰
 
 Application de gestion immobilière et de trésorerie développée avec Electron, Vue 3 et Prisma.
 
 ## 🚀 Installation et Configuration
 
-Suivez ces étapes pour lancer le projet localement.
+Suivez ces étapes pour lancer le projet sur une nouvelle machine.
 
-### 1. Cloner le projet
+### 1. Prérequis
+
+*   **Node.js** (v16 ou supérieur)
+*   **MySQL** (Serveur en cours d'exécution)
+*   **Git**
+
+### 2. Récupération du projet
 
 ```bash
-git clone https://github.com/Indesix/CashCash.git cashcashapp
-cd cashcashapp
+git clone https://github.com/Indesix/CashCash.git
+cd CashCash/cashcashapp
 ```
 
-### 2. Création de la base de données MySQL
+### 3. Configuration de l'environnement
 
-Assurez-vous d'avoir un serveur MySQL en cours d'exécution.
-Créez une nouvelle base de données (par exemple `cash_cash`).
+1.  Créez un fichier nommé `.env` à la racine du dossier `cashcashapp`.
+2.  Ajoutez-y la configuration de votre base de données locale :
 
-### 3. Installation des dépendances
+```env
+# Remplacez user, password et le nom de la base de données par vos informations
+DATABASE_URL="mysql://root:password@localhost:3306/cash_cash"
+```
 
-Installez les paquets nécessaires via npm :
+### 4. Installation
+
+Cette commande installe les dépendances et génère automatiquement le client Prisma.
 
 ```bash
 npm install
 ```
 
-### 4. Configuration de Prisma
+### 5. Initialisation de la Base de Données
 
-1. Créez un fichier `.env` à la racine du dossier `cashcashapp`.
-2. Ajoutez-y la variable de connexion suivante (adaptez `user:password` et le port si nécessaire) :
-
-```env
-DATABASE_URL="mysql://user:password@localhost:3306/cash_cash"
-```
-
-3. Générez le client Prisma pour faire le lien avec la base de données :
+Si votre base de données est vide, créez les tables automatiquement avec cette commande :
 
 ```bash
-npx prisma generate
+npm run db:push
 ```
 
-*(Optionnel : Si votre base de données est vide, vous pouvez pousser le schéma avec `npx prisma db push`)*
+*(Si vous avez déjà une base de données existante et que vous voulez mettre à jour le code en fonction de celle-ci, utilisez `npm run db:pull`)*
 
-### 5. Lancer l'application
-
-Démarrez l'application en mode développement :
+### 6. Lancer l'application
 
 ```bash
-npm run start
+npm start
 ```
+
+## 🛠️ Commandes Utiles
+
+*   `npm run generate` : Régénère le client Prisma (utile si vous changez de machine ou si vous avez des erreurs de type "Prisma Client not found").
+*   `npm run db:push` : Envoie le schéma du code vers la base de données (Création/Mise à jour des tables).
+*   `npm run db:pull` : Récupère le schéma de la base de données vers le code.
 
 ## ✨ Fonctionnalités principales
+
 Objectif: permettre à un investisseur en immobilier de gérer son patrimoine (achat, vente, entretien, location) et visualiser sa trésorerie.
+
 - **Gestion de Trésorerie** : 
   - Ajouter un nouveau compte bancaire.
   - Voir le solde des comptes.
 - **Gestion Immobilière** : 
   - Ajouter un immeuble.
   - Modifier les informations d'un immeuble.
-  - Supprimer un immeuble..git
+  - Supprimer un immeuble.
+  - Gérer les locataires (Ajout/Suppression/Lien avec immeuble).
+  - Gérer les entretiens..git
 

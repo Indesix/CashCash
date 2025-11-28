@@ -9,32 +9,35 @@ export class ImmeubleRepository {
   }
 
   async getImmeubles(): Promise<Immeuble[]> {
+    //findMany is like select * from Immeuble
     const rows = await this.dbclient.immeuble.findMany({
       include: {
         bail: {
-          include: {
+          include: { //similar to joins in sql
             locataire: true
           },
           orderBy: {
             IdBail: 'desc'
           },
-          take: 1
+          take: 1 //get only the latest bail (if any) 
+          // (the first when ordered desc by IdBail)
         }
       }
     });
 
     return rows.map((i) => {
-      const currentBail = i.bail[0];
+      const currentBail = i.bail[0];// prisma returns arrays for relations, we want only the latest bail
       const locataireNom = currentBail?.locataire?.Nom 
         ? `${currentBail.locataire.Nom} ${currentBail.locataire.Prenom || ''}`.trim() 
-        : undefined;
+        : undefined; //undefined if no tenant
+      const idLocataire = currentBail?.locataire?.IdLocataire;
 
       return {
         idImmeuble: i.IdImmeuble,
         typeImmeuble: i.TypeImmeuble,
         adresse: i.Adresse,
         rc: i.RC,
-        surface: i.Surface ? i.Surface.toNumber() : 0,
+        surface: i.Surface ? i.Surface.toNumber() : 0, // Decimal to number
         valeurAchat: i.ValeurAchat ? i.ValeurAchat.toNumber() : 0,
         chambres: i.Chambres,
         wc: i.WC,
@@ -43,7 +46,8 @@ export class ImmeubleRepository {
         jardin: i.Jardin,
         balcon: i.Balcon,
         ascenseur: i.Ascenseur,
-        locataireName: locataireNom
+        locataireName: locataireNom,
+        idLocataire: idLocataire
       } as Immeuble;
     });
   }
@@ -52,16 +56,19 @@ export class ImmeubleRepository {
     // 1. Calculate new ID for Immeuble
     let newId = immeuble.idImmeuble;
     if (!newId) {
+      // findFirst vaoir 
+      // le premier enregistrement selon l'ordre spécifié
+      //similaire a take 1 order by IdImmeuble desc avec findMany
         const max = await this.dbclient.immeuble.findFirst({
             orderBy: { IdImmeuble: 'desc' }
         });
-        newId = (max?.IdImmeuble ?? 0) + 1;
+        newId = (max?.IdImmeuble ?? 0) + 1; //make sure to start from 1 if no records
     }
 
     // 2. Prepare operations
     const operations: any[] = [];
 
-    // Operation A: Create Immeuble
+    // Operation A: Create Immeuble SQL de INSERT
     operations.push(this.dbclient.immeuble.create({
       data: {
         IdImmeuble: newId,
@@ -135,6 +142,8 @@ export class ImmeubleRepository {
                 // Let's update `SoldeInitial` for now as "Current Balance" effectively, 
                 // since the app seems to treat it as such.
                 SoldeInitial: { decrement: immeuble.valeurAchat }
+                //what is decrement : 
+                // c'est une opération atomique qui décrémente la valeur actuelle de SoldeInitial de la valeur spécifiée
             }
         }));
     }
@@ -172,11 +181,33 @@ export class ImmeubleRepository {
   }
 
   async deleteImmeuble(id: number): Promise<void> {
-    await this.dbclient.immeuble.delete({
-      where: {
-        IdImmeuble: id,
-      },
-    });
+    // On prépare une liste d'opérations à exécuter en transaction
+    const operations = [
+      // 1. Supprimer tous les baux associés à cet immeuble
+      this.dbclient.bail.deleteMany({
+        where: { IdImmeuble: id },
+      }),
+      
+      // 2. Supprimer toutes les transactions associées (ex: achat, revenus...)
+      this.dbclient.transaction.deleteMany({
+        where: { IdImmeuble: id },
+      }),
+
+      // 3. Supprimer l'historique des entretiens associés
+      this.dbclient.entretien_log.deleteMany({
+        where: { IdImmeuble: id },
+      }),
+
+      // 4. Enfin, supprimer l'immeuble lui-même
+      this.dbclient.immeuble.delete({
+        where: {
+          IdImmeuble: id,
+        },
+      }),
+    ];
+
+    // Exécuter toutes les suppressions en une seule transaction atomique
+    await this.dbclient.$transaction(operations);
   }
 
   async updateImmeuble(id: number, immeuble: Partial<Immeuble>): Promise<void> {
@@ -200,16 +231,25 @@ export class ImmeubleRepository {
       },
     }));
 
-    let locataireIdForBail = immeuble.idLocataire;
+    // Always clear existing bails to ensure the new state is reflected (1 property = 1 active tenant)
+    // This handles the case where the user wants to remove the tenant (by sending no tenant data)
+    operations.push(this.dbclient.bail.deleteMany({
+        where: { IdImmeuble: id }
+    }));
 
-    if (immeuble.locataireName && !locataireIdForBail) {
+    let locataireIdForBail = immeuble.idLocataire;
+    const locataireName = immeuble.locataireName?.trim();
+
+    console.log(`Updating Immeuble ${id}. LocataireName: '${locataireName}', IdLocataire: ${locataireIdForBail}`);
+
+    if (locataireName && !locataireIdForBail) {
         const maxLoc = await this.dbclient.locataire.findFirst({ orderBy: { IdLocataire: 'desc' } });
         const newLocId = (maxLoc?.IdLocataire ?? 0) + 1;
 
         operations.push(this.dbclient.locataire.create({
             data: {
                 IdLocataire: newLocId,
-                Nom: immeuble.locataireName,
+                Nom: locataireName,
             }
         }));
         locataireIdForBail = newLocId;

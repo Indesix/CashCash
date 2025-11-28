@@ -9,7 +9,11 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "echo \"No linting configured\""
+    "lint": "echo \"No linting configured\"",
+    "generate": "prisma generate --schema=./src/main/repositories/prisma/schema.prisma",
+    "db:pull": "prisma db pull --schema=./src/main/repositories/prisma/schema.prisma",
+    "db:push": "prisma db push --schema=./src/main/repositories/prisma/schema.prisma",
+    "postinstall": "npm run generate"
   },
   "keywords": [],
   "author": {
