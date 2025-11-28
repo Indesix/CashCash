@@ -21,8 +21,16 @@ cd CashCash/cashcashapp
 
 ### 3. Configuration de l'environnement
 
-1.  Créez un fichier nommé `.env` à la racine du dossier `cashcashapp`.
-2.  Ajoutez-y la configuration de votre base de données locale :
+1.  **Création de la base de données** :
+    Connectez-vous à votre serveur MySQL (via terminal ou Workbench) et exécutez la commande suivante pour créer une base vide :
+    ```sql
+    CREATE DATABASE cash_cash;
+    ```
+
+2.  **Fichier .env** :
+    Créez un fichier nommé `.env` à la racine du dossier `cashcashapp`.
+
+3.  Ajoutez-y la configuration de votre base de données locale :
 
 ```env
 # Remplacez user, password et le nom de la base de données par vos informations
